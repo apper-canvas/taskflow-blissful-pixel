@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'react-toastify';
 import ApperIcon from '../components/ApperIcon';
@@ -104,27 +104,36 @@ function Home() {
     }
   };
 
-  const filteredTasks = tasks.filter(task => {
-    const matchesCategory = activeCategory === 'all' || task.categoryId === activeCategory;
-    const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
-    const matchesStatus = statusFilter === 'all' || 
-      (statusFilter === 'completed' && task.completed) ||
-      (statusFilter === 'pending' && !task.completed) ||
-      (statusFilter === 'overdue' && !task.completed && task.dueDate && new Date(task.dueDate) < new Date());
+const filteredTasks = useMemo(() => {
+    return tasks.filter(task => {
+      const matchesCategory = activeCategory === 'all' || task.categoryId === activeCategory;
+      const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
+      const matchesStatus = statusFilter === 'all' || 
+        (statusFilter === 'completed' && task.completed) ||
+        (statusFilter === 'pending' && !task.completed) ||
+        (statusFilter === 'overdue' && !task.completed && task.dueDate && new Date(task.dueDate) < new Date());
+      
+      return matchesCategory && matchesSearch && matchesPriority && matchesStatus;
+    });
+  }, [tasks, activeCategory, searchQuery, priorityFilter, statusFilter]);
+
+  const { completedToday, totalTasks, progressPercentage } = useMemo(() => {
+    const completed = tasks.filter(task => 
+      task.completed && 
+      task.completedAt && 
+      new Date(task.completedAt).toDateString() === new Date().toDateString()
+    ).length;
+
+    const total = tasks.filter(task => !task.completed).length;
+    const percentage = total > 0 ? Math.round((completed / (completed + total)) * 100) : 0;
     
-    return matchesCategory && matchesSearch && matchesPriority && matchesStatus;
-  });
-
-  const completedToday = tasks.filter(task => 
-    task.completed && 
-    task.completedAt && 
-    new Date(task.completedAt).toDateString() === new Date().toDateString()
-  ).length;
-
-  const totalTasks = tasks.filter(task => !task.completed).length;
-  const progressPercentage = totalTasks > 0 ? Math.round((completedToday / (completedToday + totalTasks)) * 100) : 0;
-
+    return {
+      completedToday: completed,
+      totalTasks: total,
+      progressPercentage: percentage
+    };
+  }, [tasks]);
   if (loading) {
     return (
       <div className="h-screen flex flex-col overflow-hidden bg-gray-50">

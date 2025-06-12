@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { format, isToday, isPast, parseISO } from 'date-fns';
 import ApperIcon from './ApperIcon';
@@ -122,16 +122,25 @@ function MainFeature({
     return !task.completed && task.dueDate && isPast(parseISO(task.dueDate)) && !isToday(parseISO(task.dueDate));
   };
 
-  const activeTasks = tasks.filter(task => !task.completed);
-  const completedTasks = tasks.filter(task => task.completed);
-  const displayTasks = showCompleted ? tasks : activeTasks;
-
-  const sortedTasks = [...displayTasks].sort((a, b) => {
-    if (a.completed !== b.completed) {
-      return a.completed ? 1 : -1;
-    }
-    return a.order - b.order;
-  });
+const { activeTasks, completedTasks, displayTasks, sortedTasks } = useMemo(() => {
+    const active = tasks.filter(task => !task.completed);
+    const completed = tasks.filter(task => task.completed);
+    const display = showCompleted ? tasks : active;
+    
+    const sorted = [...display].sort((a, b) => {
+      if (a.completed !== b.completed) {
+        return a.completed ? 1 : -1;
+      }
+      return a.order - b.order;
+    });
+    
+    return {
+      activeTasks: active,
+      completedTasks: completed,
+      displayTasks: display,
+      sortedTasks: sorted
+    };
+  }, [tasks, showCompleted]);
 
   if (tasks.length === 0) {
     return (

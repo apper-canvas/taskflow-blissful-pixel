@@ -5,11 +5,27 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 class TaskService {
   constructor() {
     this.tasks = [...tasksData];
+    this.cache = new Map();
   }
 
-  async getAll() {
+  _invalidateCache() {
+    this.cache.clear();
+  }
+
+  _getCacheKey(method, ...args) {
+    return `${method}:${JSON.stringify(args)}`;
+  }
+
+async getAll() {
+    const cacheKey = this._getCacheKey('getAll');
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    
     await delay(300);
-    return [...this.tasks];
+    const result = [...this.tasks];
+    this.cache.set(cacheKey, result);
+    return result;
   }
 
   async getById(id) {
@@ -21,7 +37,7 @@ class TaskService {
     return { ...task };
   }
 
-  async create(taskData) {
+async create(taskData) {
     await delay(250);
     const newTask = {
       id: Date.now().toString(),
@@ -30,10 +46,11 @@ class TaskService {
       completedAt: null
     };
     this.tasks.push(newTask);
+    this._invalidateCache();
     return { ...newTask };
   }
 
-  async update(id, updates) {
+async update(id, updates) {
     await delay(200);
     const index = this.tasks.findIndex(t => t.id === id);
     if (index === -1) {
@@ -45,10 +62,11 @@ class TaskService {
       ...updates
     };
     
+    this._invalidateCache();
     return { ...this.tasks[index] };
   }
 
-  async delete(id) {
+async delete(id) {
     await delay(200);
     const index = this.tasks.findIndex(t => t.id === id);
     if (index === -1) {
@@ -56,22 +74,44 @@ class TaskService {
     }
     
     this.tasks.splice(index, 1);
+    this._invalidateCache();
     return true;
   }
 
-  async getByCategory(categoryId) {
+async getByCategory(categoryId) {
+    const cacheKey = this._getCacheKey('getByCategory', categoryId);
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    
     await delay(250);
-    return this.tasks.filter(t => t.categoryId === categoryId).map(t => ({ ...t }));
+    const result = this.tasks.filter(t => t.categoryId === categoryId).map(t => ({ ...t }));
+    this.cache.set(cacheKey, result);
+    return result;
   }
 
-  async getCompleted() {
+async getCompleted() {
+    const cacheKey = this._getCacheKey('getCompleted');
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    
     await delay(250);
-    return this.tasks.filter(t => t.completed).map(t => ({ ...t }));
+    const result = this.tasks.filter(t => t.completed).map(t => ({ ...t }));
+    this.cache.set(cacheKey, result);
+    return result;
   }
 
-  async getPending() {
+async getPending() {
+    const cacheKey = this._getCacheKey('getPending');
+    if (this.cache.has(cacheKey)) {
+      return this.cache.get(cacheKey);
+    }
+    
     await delay(250);
-    return this.tasks.filter(t => !t.completed).map(t => ({ ...t }));
+    const result = this.tasks.filter(t => !t.completed).map(t => ({ ...t }));
+    this.cache.set(cacheKey, result);
+    return result;
   }
 }
 
