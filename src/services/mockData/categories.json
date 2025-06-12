@@ -1,0 +1,37 @@
+[
+  {
+    "id": "work",
+    "name": "Work",
+    "color": "#5B47E0",
+    "icon": "Briefcase",
+    "order": 0
+  },
+  {
+    "id": "personal",
+    "name": "Personal",
+    "color": "#4ECDC4",
+    "icon": "User",
+    "order": 1
+  },
+  {
+    "id": "shopping",
+    "name": "Shopping",
+    "color": "#FF6B6B",
+    "icon": "ShoppingCart",
+    "order": 2
+  },
+  {
+    "id": "health",
+    "name": "Health",
+    "color": "#4DABF7",
+    "icon": "Heart",
+    "order": 3
+  },
+  {
+    "id": "finance",
+    "name": "Finance",
+    "color": "#FFD93D",
+    "icon": "DollarSign",
+    "order": 4
+  }
+]
