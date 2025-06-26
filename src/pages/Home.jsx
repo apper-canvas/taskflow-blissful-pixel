@@ -38,12 +38,12 @@ function Home() {
     }
   };
 
-  const addTask = async (taskData) => {
+const addTask = async (taskData) => {
     try {
       const newTask = await taskService.create({
         ...taskData,
         order: tasks.length,
-        createdAt: new Date().toISOString()
+        created_at: new Date().toISOString()
       });
       setTasks(prev => [...prev, newTask]);
       toast.success('Task added successfully');
@@ -52,11 +52,11 @@ function Home() {
     }
   };
 
-  const updateTask = async (id, updates) => {
+const updateTask = async (id, updates) => {
     try {
       const updatedTask = await taskService.update(id, updates);
       setTasks(prev => prev.map(task => 
-        task.id === id ? updatedTask : task
+        task.Id === id ? updatedTask : task
       ));
       if (updates.completed) {
         toast.success('Task completed! 🎉');
@@ -68,22 +68,22 @@ function Home() {
     }
   };
 
-  const deleteTask = async (id) => {
+const deleteTask = async (id) => {
     try {
       await taskService.delete(id);
-      setTasks(prev => prev.filter(task => task.id !== id));
+      setTasks(prev => prev.filter(task => task.Id !== id));
       toast.success('Task deleted');
     } catch (err) {
       toast.error('Failed to delete task');
     }
   };
 
-  const reorderTasks = async (sourceIndex, destIndex, sourceCategoryId, destCategoryId) => {
+const reorderTasks = async (sourceIndex, destIndex, sourceCategoryId, destCategoryId) => {
     const newTasks = [...tasks];
     const [movedTask] = newTasks.splice(sourceIndex, 1);
     
     if (sourceCategoryId !== destCategoryId) {
-      movedTask.categoryId = destCategoryId;
+      movedTask.category_id = destCategoryId;
     }
     
     newTasks.splice(destIndex, 0, movedTask);
@@ -96,7 +96,7 @@ function Home() {
     setTasks(newTasks);
     
     try {
-      await taskService.update(movedTask.id, movedTask);
+      await taskService.update(movedTask.Id, movedTask);
       toast.success('Task moved');
     } catch (err) {
       toast.error('Failed to move task');
@@ -106,23 +106,23 @@ function Home() {
 
 const filteredTasks = useMemo(() => {
     return tasks.filter(task => {
-      const matchesCategory = activeCategory === 'all' || task.categoryId === activeCategory;
+      const matchesCategory = activeCategory === 'all' || task.category_id === activeCategory;
       const matchesSearch = task.title.toLowerCase().includes(searchQuery.toLowerCase());
       const matchesPriority = priorityFilter === 'all' || task.priority === priorityFilter;
       const matchesStatus = statusFilter === 'all' || 
         (statusFilter === 'completed' && task.completed) ||
         (statusFilter === 'pending' && !task.completed) ||
-        (statusFilter === 'overdue' && !task.completed && task.dueDate && new Date(task.dueDate) < new Date());
+        (statusFilter === 'overdue' && !task.completed && task.due_date && new Date(task.due_date) < new Date());
       
       return matchesCategory && matchesSearch && matchesPriority && matchesStatus;
     });
   }, [tasks, activeCategory, searchQuery, priorityFilter, statusFilter]);
 
-  const { completedToday, totalTasks, progressPercentage } = useMemo(() => {
+const { completedToday, totalTasks, progressPercentage } = useMemo(() => {
     const completed = tasks.filter(task => 
       task.completed && 
-      task.completedAt && 
-      new Date(task.completedAt).toDateString() === new Date().toDateString()
+      task.completed_at && 
+      new Date(task.completed_at).toDateString() === new Date().toDateString()
     ).length;
 
     const total = tasks.filter(task => !task.completed).length;
@@ -195,7 +195,7 @@ const filteredTasks = useMemo(() => {
     );
   }
 
-  return (
+return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
       {/* Header with Quick Add */}
       <header className="flex-shrink-0 bg-white border-b border-gray-200 px-6 py-4">
@@ -214,6 +214,20 @@ const filteredTasks = useMemo(() => {
             </div>
           </div>
           
+          {/* Logout Button */}
+          <div className="flex items-center space-x-4">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => {
+                const { ApperUI } = window.ApperSDK;
+                ApperUI.logout();
+              }}
+              className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 transition-colors"
+            >
+              Logout
+            </motion.button>
+          </div>
           {/* Progress Ring */}
           <motion.div
             initial={{ scale: 0 }}
@@ -282,16 +296,16 @@ const filteredTasks = useMemo(() => {
                 </span>
               </motion.button>
 
-              {categories.map(category => {
-                const categoryTasks = tasks.filter(task => task.categoryId === category.id);
+{categories.map(category => {
+                const categoryTasks = tasks.filter(task => task.category_id === category.Id);
                 return (
                   <motion.button
-                    key={category.id}
+                    key={category.Id}
                     whileHover={{ scale: 1.02, x: 4 }}
                     whileTap={{ scale: 0.98 }}
-                    onClick={() => setActiveCategory(category.id)}
+                    onClick={() => setActiveCategory(category.Id)}
                     className={`w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all ${
-                      activeCategory === category.id
+                      activeCategory === category.Id
                         ? 'bg-primary text-white shadow-lg'
                         : 'text-gray-700 hover:bg-gray-50'
                     }`}
@@ -301,9 +315,9 @@ const filteredTasks = useMemo(() => {
                       style={{ backgroundColor: category.color }}
                     />
                     <ApperIcon name={category.icon} size={20} />
-                    <span className="font-medium truncate">{category.name}</span>
+                    <span className="font-medium truncate">{category.Name}</span>
                     <span className={`ml-auto text-sm px-2 py-1 rounded-full ${
-                      activeCategory === category.id
+                      activeCategory === category.Id
                         ? 'bg-white/20 text-white'
                         : 'bg-gray-100 text-gray-600'
                     }`}>
